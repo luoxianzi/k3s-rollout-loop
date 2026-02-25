@@ -1,0 +1,17 @@
+# secrets / local
+.env
+*.key
+*.pem
+*.p12
+*.kubeconfig
+*.log
+
+# big artifacts
+*.tar
+*.tar.gz
+*.tgz
+*.zst
+
+# docker creds
+.docker/
+**/config.json

@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"web-svc","namespace":"demo"},"spec":{"ports":[{"nodePort":30080,"port":80,"targetPort":80}],"selector":{"app":"web"},"type":"NodePort"}}
+  creationTimestamp: "2026-02-25T02:18:51Z"
+  name: web-svc
+  namespace: demo
+  resourceVersion: "13359"
+  uid: 42a18ec8-2512-49bd-a5ef-013ad3958697
+spec:
+  clusterIP: 10.43.1.23
+  clusterIPs:
+  - 10.43.1.23
+  externalTrafficPolicy: Cluster
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - nodePort: 30080
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: web
+  sessionAffinity: None
+  type: NodePort
+status:
+  loadBalancer: {}

@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "17"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"name":"web","namespace":"demo"},"spec":{"replicas":2,"selector":{"matchLabels":{"app":"web","version":"v1"}},"template":{"metadata":{"labels":{"app":"web","version":"v1"}},"spec":{"containers":[{"image":"docker.io/library/nginx:1.25","imagePullPolicy":"Never","livenessProbe":{"httpGet":{"path":"/","port":80},"initialDelaySeconds":10,"periodSeconds":10},"name":"nginx","ports":[{"containerPort":80}],"readinessProbe":{"httpGet":{"path":"/","port":80},"initialDelaySeconds":2,"periodSeconds":5},"volumeMounts":[{"mountPath":"/usr/share/nginx/html/index.html","name":"web-content","subPath":"index.html"}]}],"volumes":[{"configMap":{"name":"web-content-v1"},"name":"web-content"}]}}}}
+    kubernetes.io/change-cause: 'release v2: switch image to v2 + label release=v2'
+  creationTimestamp: "2026-02-25T02:18:51Z"
+  generation: 21
+  name: web
+  namespace: demo
+  resourceVersion: "32602"
+  uid: 8e657e0b-d5aa-4919-9011-c0eab96b753b
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 2
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: web
+      version: v1
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/restartedAt: "2026-02-25T18:36:29+08:00"
+      labels:
+        app: web
+        release: v2
+        version: v1
+    spec:
+      containers:
+      - image: crpi-tc1lem0j8cya5brt-vpc.cn-guangzhou.personal.cr.aliyuncs.com/luo-demo1/web1:v2
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: 80
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: nginx
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: 80
+            scheme: HTTP
+          initialDelaySeconds: 2
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+      - name: acr-pull
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 2
+  conditions:
+  - lastTransitionTime: "2026-02-25T02:18:54Z"
+    lastUpdateTime: "2026-02-25T02:18:54Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2026-02-25T02:18:51Z"
+    lastUpdateTime: "2026-02-25T18:48:14Z"
+    message: ReplicaSet "web-69b8dcbb87" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 21
+  readyReplicas: 2
+  replicas: 2
+  updatedReplicas: 2

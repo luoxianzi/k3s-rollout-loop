@@ -1,0 +1,15 @@
+{
+	auto_https off
+}
+http://8.138.112.171.nip.io {
+	encode gzip
+
+	handle_path /demo* {
+		reverse_proxy 127.0.0.1:30080
+	}
+
+	handle {
+		root * /var/snap/caddy/common/site
+		file_server
+	}
+}

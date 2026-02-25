@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ShipIt Rollout | k3s 上线与滚动发布</title>
+  <meta name="description" content="镜像 v1/v2 → k3s（Deployment/Service）→ Caddy 反向代理 → 公网访问。支持滚动更新与回滚，页面展示集群运行状态与发布记录。" />
+  <style>
+    :root{
+      --bg:#f6f8fc;
+      --bg2:#ffffff;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#475569;
+      --muted2:#64748b;
+      --border:#e5e7eb;
+      --shadow:0 10px 30px rgba(15,23,42,.08);
+      --accent:#2563eb;
+      --accent2:#7c3aed;
+      --good:#16a34a;
+      --pill:#eef2ff;
+      --code:#0b1020;
+      --radius:18px;
+      --sans: system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans",sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      line-height:1.65;
+      background:
+        radial-gradient(900px 520px at 10% -10%, rgba(37,99,235,.14), transparent 55%),
+        radial-gradient(720px 460px at 95% 0%, rgba(124,58,237,.12), transparent 55%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
+      min-height:100vh;
+    }
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .wrap{max-width:1080px;margin:0 auto;padding:26px 18px 54px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+    .brand{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none}
+    .logo{
+      width:34px;height:34px;border-radius:12px;
+      background:linear-gradient(135deg, rgba(37,99,235,.95), rgba(124,58,237,.90));
+      box-shadow:0 12px 28px rgba(37,99,235,.20);
+    }
+    .kicker{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2)}
+    .nav{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .link{
+      font-size:13px;color:var(--text);
+      padding:8px 10px;border-radius:12px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.7);
+      box-shadow:0 2px 10px rgba(15,23,42,.04);
+    }
+    .link:hover{border-color:#d6dbe6}
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
+    }
+    .hero{
+      padding:18px;
+      border-radius:22px;
+      border:1px solid var(--border);
+      background:
+        radial-gradient(700px 380px at 0% 0%, rgba(37,99,235,.10), transparent 55%),
+        radial-gradient(620px 360px at 100% 0%, rgba(124,58,237,.08), transparent 58%),
+        linear-gradient(180deg, rgba(255,255,255,.90), rgba(255,255,255,.72));
+      box-shadow:var(--shadow);
+    }
+    .h1{font-size:34px;line-height:1.2;margin:10px 0 10px}
+    .muted{color:var(--muted)}
+    .small{font-size:12px;color:var(--muted2)}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+    .btn{
+      display:inline-flex;align-items:center;gap:10px;
+      padding:11px 14px;border-radius:14px;
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--text);
+      box-shadow:0 8px 20px rgba(15,23,42,.06);
+      user-select:none;
+    }
+    .btnPrimary{
+      border-color:rgba(37,99,235,.25);
+      background:linear-gradient(135deg, rgba(37,99,235,1), rgba(124,58,237,1));
+      color:#fff;
+      box-shadow:0 14px 28px rgba(37,99,235,.22);
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .chip{
+      font-size:12px;
+      padding:6px 10px;border-radius:999px;
+      border:1px solid #dbe3ff;
+      background:var(--pill);
+      color:#1e293b;
+    }
+    .grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
+    @media(min-width:920px){.grid{grid-template-columns: 1.25fr .75fr}}
+    .h2{font-size:18px;margin:0 0 10px}
+    .h3{font-size:14px;margin:0 0 10px;color:#1f2937}
+    .list{margin:10px 0 0;padding-left:18px}
+    .list li{margin:6px 0}
+    .pillRow{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    .pill{
+      font-size:12px;padding:6px 10px;border-radius:999px;
+      border:1px solid var(--border);background:#fff;color:var(--muted);
+    }
+
+    /* Architecture */
+    .svgBox{
+      border:1px solid var(--border);
+      background:linear-gradient(180deg, rgba(248,250,252,.85), rgba(248,250,252,.55));
+      border-radius:14px;
+      padding:12px;
+      overflow:hidden;
+    }
+    .svgBox .box{fill:#fff;stroke:#d7dde9;stroke-width:2}
+    .svgBox .mutedText{fill:#64748b}
+    .svgBox .arrow{stroke:rgba(37,99,235,.95);stroke-width:3;marker-end:url(#arrow)}
+
+    /* Status block */
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 12px}
+    .tab{
+      cursor:pointer;font-size:12px;padding:8px 10px;border-radius:12px;
+      border:1px solid var(--border);
+      background:#fff;color:var(--text);
+    }
+    .tab.active{
+      border-color:rgba(37,99,235,.30);
+      background:rgba(37,99,235,.06);
+    }
+    .preTop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}
+    .copy{
+      cursor:pointer;font-size:12px;padding:8px 10px;border-radius:12px;
+      border:1px solid var(--border);
+      background:#fff;color:var(--text);
+    }
+    pre{
+      margin:0;
+      background:var(--code);
+      color:#e7eaff;
+      border-radius:14px;
+      padding:14px;
+      overflow:auto;
+      font-family:var(--mono);
+      font-size:12.5px;
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .statusDot{
+      display:inline-flex;align-items:center;gap:8px;
+      font-size:12px;color:var(--muted);
+      padding:6px 10px;border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+    }
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 0 4px rgba(22,163,74,.12)}
+    .footer{margin-top:16px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--muted2);font-size:12px}
+    code{font-family:var(--mono);font-size:12.5px;background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.18);padding:1px 6px;border-radius:8px}
+    @media (prefers-reduced-motion: reduce){
+      .btn:hover{transform:none}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <div class="topbar">
+      <a class="brand" href="#">
+        <span class="logo" aria-hidden="true"></span>
+        <div>
+          <div class="kicker">Personal Project</div>
+          <b>ShipIt Rollout</b>
+        </div>
+      </a>
+      <div class="nav">
+        <a class="link" href="#overview">概览</a>
+        <a class="link" href="#design">架构</a>
+        <a class="link" href="#status">运行状态</a>
+        <a class="link" href="#repo">仓库</a>
+      </div>
+    </div>
+
+    <div class="hero" id="overview">
+      <div class="kicker">Deploy • Release • Rollback • Operability</div>
+      <div class="h1">ShipIt Rollout</div>
+      <div class="muted">
+        我完成了一个<strong>端到端上线闭环</strong>：构建并发布镜像 v1/v2，在 k3s 中部署 <code>Deployment</code> + <code>Service(NodePort)</code>，
+        通过 Caddy 暴露 80 端口对外提供访问。项目重点是<strong>发布可控、切换可验证、问题可定位</strong>，体现运维与 DevOps 能力。
+      </div>
+
+      <div class="row">
+        <a class="btn btnPrimary" href="/demo" target="_blank" rel="noreferrer">打开 Demo（/demo）</a>
+        <a class="btn" href="/evidence/rollout.txt" target="_blank" rel="noreferrer">查看发布记录（文本）</a>
+        <a class="btn" href="#repo" rel="noreferrer">代码仓库（待补）</a>
+
+        <span class="statusDot" title="下方运行状态区从服务器读取输出">
+          <span class="dot" aria-hidden="true"></span>
+          服务运行中
+        </span>
+      </div>
+
+      <div class="chips" aria-label="Tech highlights">
+        <span class="chip">Docker 镜像 v1/v2</span>
+        <span class="chip">k3s / Kubernetes</span>
+        <span class="chip">Deployment（2 副本）</span>
+        <span class="chip">Service(NodePort:30080)</span>
+        <span class="chip">Rolling Update / Rollback</span>
+        <span class="chip">Caddy :80 入口</span>
+        <span class="chip">UFW 收口端口</span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="h2">我负责的内容</div>
+        <div class="small">从“能跑”做到“可上线、可发布、可回滚、可排障”。</div>
+
+        <div style="display:grid;grid-template-columns:1fr;gap:12px;margin-top:10px">
+          <div>
+            <div class="h3">交付与实现</div>
+            <ul class="list">
+              <li><b>镜像版本管理</b>：构建并发布 v1/v2 镜像，用于验证发布与回滚链路。</li>
+              <li><b>集群编排</b>：在 k3s 落地 Deployment + Service(NodePort)，保障副本数与滚动更新策略生效。</li>
+              <li><b>公网访问</b>：Caddy 监听 80，<code>/</code> 为作品页，<code>/demo</code> 反向代理到 <code>127.0.0.1:30080</code>。</li>
+              <li><b>发布控制</b>：通过 <code>kubectl set image</code> 驱动更新，结合 rollout status/history 追踪发布结果。</li>
+            </ul>
+          </div>
+
+          <div>
+            <div class="h3">运维与可用性</div>
+            <ul class="list">
+              <li><b>可观测输出</b>：页面展示 Deployment / Pods / 发布记录 / /demo 响应，便于核对真实运行状态。</li>
+              <li><b>安全加固</b>：UFW 只放行 22/80，封闭 NodePort 与 k8s 关键端口；禁用 root 远程登录，仅允许 dev 登录。</li>
+              <li><b>排障路径</b>：可从入口层（Caddy）→ NodePort → Pod 逐层用 curl/kubectl 定位问题。</li>
+            </ul>
+            <div class="pillRow">
+              <span class="pill">发布可控</span>
+              <span class="pill">可回滚</span>
+              <span class="pill">可排障</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="h2">发布与回滚能力（我能做到什么）</div>
+
+        <ul class="list" style="margin-top:12px">
+          <li><b>滚动更新</b>：更新镜像版本后，k3s 按策略逐步替换 Pod，服务连续可用。</li>
+          <li><b>回滚</b>：可切回上一版本镜像，快速恢复到稳定状态。</li>
+          <li><b>发布记录</b>：为每次发布增加 change-cause，保留历史修订信息。</li>
+        </ul>
+
+        <div class="small muted" style="margin-top:10px">
+          相关输出在「运行状态」区实时展示（Deployment/Pods/Rollout）。
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="design" style="margin-top:14px">
+      <div class="h2">架构（访问链路）</div>
+      <div class="small">从浏览器到 Pod：入口层与服务层解耦，便于定位与扩展。</div>
+
+      <div class="svgBox" style="margin-top:12px">
+        <svg width="100%" viewBox="0 0 980 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Architecture diagram">
+          <defs>
+            <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L8,3 L0,6 Z" fill="rgba(37,99,235,.95)"/>
+            </marker>
+          </defs>
+
+          <rect class="box" x="40" y="52" width="240" height="92" rx="16"/>
+          <text x="70" y="92" font-size="16" font-family="system-ui">Browser</text>
+          <text class="mutedText" x="70" y="118" font-size="13" font-family="system-ui">http://8.138.112.171.nip.io</text>
+
+          <rect class="box" x="350" y="52" width="280" height="92" rx="16"/>
+          <text x="380" y="88" font-size="16" font-family="system-ui">Caddy :80</text>
+          <text class="mutedText" x="380" y="114" font-size="13" font-family="system-ui">/ → 作品页</text>
+          <text class="mutedText" x="380" y="134" font-size="13" font-family="system-ui">/demo → reverse_proxy</text>
+
+          <rect class="box" x="700" y="52" width="240" height="92" rx="16"/>
+          <text x="730" y="92" font-size="16" font-family="system-ui">NodePort</text>
+          <text class="mutedText" x="730" y="118" font-size="13" font-family="system-ui">127.0.0.1:30080</text>
+
+          <rect class="box" x="350" y="200" width="280" height="98" rx="16"/>
+          <text x="380" y="240" font-size="16" font-family="system-ui">k3s Service</text>
+          <text class="mutedText" x="380" y="266" font-size="13" font-family="system-ui">demo/web-svc (NodePort 30080)</text>
+
+          <rect class="box" x="700" y="200" width="240" height="98" rx="16"/>
+          <text x="730" y="240" font-size="16" font-family="system-ui">Pods (Deployment)</text>
+          <text class="mutedText" x="730" y="266" font-size="13" font-family="system-ui">replicas=2</text>
+          <text class="mutedText" x="730" y="286" font-size="13" font-family="system-ui">image v1/v2 rolling</text>
+
+          <line class="arrow" x1="280" y1="98" x2="350" y2="98"/>
+          <line class="arrow" x1="630" y1="98" x2="700" y2="98"/>
+          <line class="arrow" x1="820" y1="144" x2="490" y2="200"/>
+          <line class="arrow" x1="630" y1="248" x2="700" y2="248"/>
+        </svg>
+      </div>
+
+      <div class="small muted" style="margin-top:10px">
+        定位思路：先看入口（Caddy / 80），再看 NodePort，再看 Pods 与镜像版本。
+      </div>
+    </div>
+
+    <div class="card" id="status" style="margin-top:14px">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-end">
+        <div>
+          <div class="h2">运行状态（实时）</div>
+          <div class="small">页面直接读取服务器输出，用于核对当前部署与发布记录。</div>
+        </div>
+        <div class="small" id="updated">Last update: —</div>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="Status tabs">
+        <button class="tab active" data-key="deploy" type="button">Deployment</button>
+        <button class="tab" data-key="pods" type="button">Pods</button>
+        <button class="tab" data-key="rollout" type="button">发布记录</button>
+        <button class="tab" data-key="demo" type="button">/demo 返回</button>
+      </div>
+
+      <div class="preTop">
+        <div class="small muted" id="hint">Deployment（当前镜像 / 副本数）</div>
+        <button class="copy" id="copyBtn" type="button">复制输出</button>
+      </div>
+
+      <pre id="pre">(loading...)</pre>
+    </div>
+
+    <div class="card" id="repo" style="margin-top:14px">
+      <div class="h2">代码仓库（建议补齐）</div>
+      <div class="muted">
+        只有网页不够“工程化”。把项目放到 GitHub/Gitee 能显著提升可信度：<b>YAML、Caddy 配置、镜像构建流程、复现步骤</b>都能审阅。
+      </div>
+      <ul class="list">
+        <li><b>建议仓库包含</b>：<code>deploy.yaml</code> / <code>service.yaml</code> / <code>Caddyfile</code> / <code>Dockerfile</code> / README（复现步骤 + 常见排障）。</li>
+        <li><b>页面上的「发布记录/运行状态」</b>继续保留，用来展示“线上真实运行”。</li>
+      </ul>
+      <div class="small muted" style="margin-top:10px">
+        你先建仓库后，把链接替换到顶部「代码仓库」按钮即可（我下一步会给你一步一步的上传流程）。
+      </div>
+
+      <div class="footer">
+        <div>k3s • Caddy • Rolling Update</div>
+        <div class="muted">Last updated based on live cluster output</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const sources = {
+      deploy: { url: '/evidence/deploy.txt',  title: 'Deployment（当前镜像 / 副本数）' },
+      pods:   { url: '/evidence/pods.txt',    title: 'Pods（pod 实际运行镜像）' },
+      rollout:{ url: '/evidence/rollout.txt', title: '发布记录（rollout history / change-cause）' },
+      demo:   { url: '/evidence/demo-head.txt', title: '/demo 返回（前几行）' },
+    };
+
+    const pre = document.getElementById('pre');
+    const tabs = Array.from(document.querySelectorAll('.tab'));
+    const copyBtn = document.getElementById('copyBtn');
+    const hint = document.getElementById('hint');
+    const updated = document.getElementById('updated');
+
+    let currentText = '';
+    async function load(key){
+      tabs.forEach(t => t.classList.toggle('active', t.dataset.key === key));
+      pre.textContent = '(loading...)';
+      copyBtn.textContent = '复制输出';
+      hint.textContent = sources[key].title;
+      try{
+        const r = await fetch(sources[key].url, { cache: 'no-store' });
+        const text = await r.text();
+        currentText = text;
+        pre.textContent = text || '(empty)';
+        updated.textContent = 'Last update: ' + new Date().toLocaleString();
+      }catch(e){
+        currentText = '';
+        pre.textContent = 'load failed: ' + e;
+      }
+    }
+
+    tabs.forEach(t => t.addEventListener('click', () => load(t.dataset.key)));
+
+    copyBtn.addEventListener('click', async () => {
+      try{
+        await navigator.clipboard.writeText(currentText || pre.textContent);
+        copyBtn.textContent = '已复制 ✅';
+        setTimeout(()=> copyBtn.textContent = '复制输出', 1200);
+      }catch(e){
+        copyBtn.textContent = '复制失败';
+        setTimeout(()=> copyBtn.textContent = '复制输出', 1200);
+      }
+    });
+
+    load('deploy');
+  </script>
+</body>
+</html>
