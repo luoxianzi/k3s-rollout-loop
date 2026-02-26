@@ -1,6 +1,6 @@
 # k3s 上线闭环：滚动发布与回滚
 
-这个项目跑通了一个最小但完整的上线闭环：构建并发布镜像 v1/v2，在 k3s 中部署 Deployment + Service(NodePort)，通过 Caddy 暴露 80 端口对外提供访问；同时验证滚动更新与回滚路径可用，并保留发布记录（change-cause）。
+这个项目完成了一个端到端的上线闭环：镜像 v1/v2 构建发布 → k3s 部署（Deployment/Service）→ Caddy 作为公网入口；并验证滚动更新与回滚路径可用，发布记录可追溯（change-cause）。
 
 在线地址：
 - 首页：http://8.138.112.171.nip.io/
