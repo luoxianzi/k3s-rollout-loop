@@ -34,6 +34,17 @@ jobs:
           script: |
             set -euo pipefail
 
+            echo "== whoami / perms =="
+            whoami
+            id
+            ls -ld /var/snap/caddy/common/site || true
+            ls -ld /var/snap/caddy/common/site/evidence || true
+
+            echo "== check uploaded files =="
+            ls -R /tmp/shipit-deploy || true
+            test -f /tmp/shipit-deploy/site/index.html
+            test -f /tmp/shipit-deploy/scripts/collect-snapshots.sh
+
             echo "== install site/index.html =="
             install -m 0644 /tmp/shipit-deploy/site/index.html /var/snap/caddy/common/site/index.html
 
@@ -44,5 +55,4 @@ jobs:
             echo "== smoke test =="
             curl -fsS http://127.0.0.1/ | head -n 2
             curl -fsS http://127.0.0.1/demo | head -n 2
-
             echo "OK"
