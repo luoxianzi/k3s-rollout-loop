@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ShipIt Rollout | k3s 上线与滚动发布</title>
+  <title>k3s 上线闭环：滚动发布与回滚 | 个人项目</title>
   <meta name="description" content="镜像 v1/v2 → k3s（Deployment/Service）→ Caddy 反向代理 → 公网访问。支持滚动更新与回滚，页面展示集群运行状态与发布记录。" />
   <style>
     :root{
@@ -173,11 +173,11 @@
   <div class="wrap">
 
     <div class="topbar">
-      <a class="brand" href="#">
+      <a class="brand" href="https://github.com/luoxianzi/k3s-rollout-loop">
         <span class="logo" aria-hidden="true"></span>
         <div>
           <div class="kicker">Personal Project</div>
-          <b>ShipIt Rollout</b>
+          <b>k3s 上线闭环：滚动发布与回滚</b>
         </div>
       </a>
       <div class="nav">
@@ -190,7 +190,7 @@
 
     <div class="hero" id="overview">
       <div class="kicker">Deploy • Release • Rollback • Operability</div>
-      <div class="h1">ShipIt Rollout</div>
+      <div class="h1">k3s 上线闭环：滚动发布与回滚</div>
       <div class="muted">
         我完成了一个<strong>端到端上线闭环</strong>：构建并发布镜像 v1/v2，在 k3s 中部署 <code>Deployment</code> + <code>Service(NodePort)</code>，
         通过 Caddy 暴露 80 端口对外提供访问。项目重点是<strong>发布可控、切换可验证、问题可定位</strong>，体现运维与 DevOps 能力。
@@ -199,7 +199,7 @@
       <div class="row">
         <a class="btn btnPrimary" href="/demo" target="_blank" rel="noreferrer">打开 Demo（/demo）</a>
         <a class="btn" href="/evidence/rollout.txt" target="_blank" rel="noreferrer">查看发布记录（文本）</a>
-        <a class="btn" href="#repo" rel="noreferrer">代码仓库（待补）</a>
+        <a class="btn" href="#repo" rel="noreferrer">代码仓库（GitHub）</a>
 
         <span class="statusDot" title="下方运行状态区从服务器读取输出">
           <span class="dot" aria-hidden="true"></span>
