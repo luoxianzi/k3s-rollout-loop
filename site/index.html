@@ -336,21 +336,20 @@
     </div>
 
     <div class="card" id="repo" style="margin-top:14px">
-      <div class="h2">代码仓库（建议补齐）</div>
+      <div class="h2">代码与配置（GitHub）</div>
       <div class="muted">
-        只有网页不够“工程化”。把项目放到 GitHub/Gitee 能显著提升可信度：<b>YAML、Caddy 配置、镜像构建流程、复现步骤</b>都能审阅。
       </div>
       <ul class="list">
-        <li><b>建议仓库包含</b>：<code>deploy.yaml</code> / <code>service.yaml</code> / <code>Caddyfile</code> / <code>Dockerfile</code> / README（复现步骤 + 常见排障）。</li>
-        <li><b>页面上的「发布记录/运行状态」</b>继续保留，用来展示“线上真实运行”。</li>
-      </ul>
+  <li><b>k8s/</b>：deploy.yaml / service.yaml（Deployment & Service / NodePort 30080）</li>
+  <li><b>caddy/</b>：Caddyfile（:80 入口；/demo 反代到 127.0.0.1:30080）</li>
+  <li><b>scripts/</b>：collect-snapshots.sh（导出运行快照到 site/evidence）</li>
+  <li><b>site/</b>：作品页源码（index.html）</li>
+</ul>
       <div class="small muted" style="margin-top:10px">
-        你先建仓库后，把链接替换到顶部「代码仓库」按钮即可（我下一步会给你一步一步的上传流程）。
       </div>
 
       <div class="footer">
         <div>k3s • Caddy • Rolling Update</div>
-        <div class="muted">Last updated based on live cluster output</div>
       </div>
     </div>
 
