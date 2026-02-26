@@ -1,3 +1,3 @@
 NAME                   IMAGE                                                                               READY   RESTARTS   AGE
-web-7c77c5d77b-hlnwk   crpi-tc1lem0j8cya5brt-vpc.cn-guangzhou.personal.cr.aliyuncs.com/luo-demo1/web1:v1   true    0          2026-02-26T07:14:39Z
-web-7c77c5d77b-tp7lj   crpi-tc1lem0j8cya5brt-vpc.cn-guangzhou.personal.cr.aliyuncs.com/luo-demo1/web1:v1   true    0          2026-02-26T07:14:36Z
+web-69b8dcbb87-4ql7m   crpi-tc1lem0j8cya5brt-vpc.cn-guangzhou.personal.cr.aliyuncs.com/luo-demo1/web1:v2   true    0          2026-02-26T08:45:23Z
+web-69b8dcbb87-p4tgx   crpi-tc1lem0j8cya5brt-vpc.cn-guangzhou.personal.cr.aliyuncs.com/luo-demo1/web1:v2   true    0          2026-02-26T08:45:21Z

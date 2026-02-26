@@ -1,2 +1,2 @@
-<h1>Hello from ACR image v1</h1>
-<p>Deployed by k3s on Alibaba ECS</p>
+<h1>Hello from ACR image v2</h1>
+<p>Rolling update works ✅</p>

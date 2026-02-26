@@ -1,2 +1,2 @@
 NAME   READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                                                                              SELECTOR
-web    2/2     2            2           29h   nginx        crpi-tc1lem0j8cya5brt-vpc.cn-guangzhou.personal.cr.aliyuncs.com/luo-demo1/web1:v1   app=web,version=v1
+web    2/2     2            2           30h   nginx        crpi-tc1lem0j8cya5brt-vpc.cn-guangzhou.personal.cr.aliyuncs.com/luo-demo1/web1:v2   app=web,version=v1
