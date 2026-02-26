@@ -1,0 +1,58 @@
+name: CI/CD Deploy (site + k8s + runtime snapshots)
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 1) 把需要的文件拷到服务器 /tmp/shipit-deploy 下（保持目录结构）
+      - name: Upload artifacts to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.K3S_HOST }}
+          username: ${{ secrets.K3S_USER }}
+          key: ${{ secrets.K3S_SSH_KEY }}
+          source: "site/index.html,scripts/collect-snapshots.sh,k8s/*.yaml"
+          target: "/tmp/shipit-deploy"
+
+      # 2) 在服务器上落盘 + apply k8s + 刷新 evidence
+      - name: Deploy on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.K3S_HOST }}
+          username: ${{ secrets.K3S_USER }}
+          key: ${{ secrets.K3S_SSH_KEY }}
+          script: |
+            set -euo pipefail
+
+            echo "== install site/index.html =="
+            install -m 0644 /tmp/shipit-deploy/site/index.html /var/snap/caddy/common/site/index.html
+
+            echo "== install collect-snapshots.sh =="
+            install -m 0755 /tmp/shipit-deploy/scripts/collect-snapshots.sh /tmp/collect-snapshots.sh
+
+            echo "== apply k8s yamls =="
+            mkdir -p /tmp/k8s
+            cp -f /tmp/shipit-deploy/k8s/*.yaml /tmp/k8s/
+            kubectl apply -f /tmp/k8s/
+            kubectl -n demo rollout status deploy/web --timeout=180s || true
+
+            echo "== refresh runtime snapshots (evidence) =="
+            /tmp/collect-snapshots.sh || true
+
+            echo "== quick smoke test =="
+            curl -fsS http://127.0.0.1/ | head -n 2
+            curl -fsS http://127.0.0.1/demo | head -n 2
+
+            echo "OK: deploy done"
