@@ -28,7 +28,7 @@ kubectl -n demo get deploy web -o wide
 kubectl -n demo get pods -o wide
 kubectl -n demo rollout history deploy/web
 
-# v1/v2 切换（把 v1 / v2 替换成你的 tag）
+# v1/v2 切换
 kubectl -n demo set image deploy/web nginx=<YOUR_IMAGE>:v2
 kubectl -n demo rollout status deploy/web
 ```
