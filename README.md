@@ -43,3 +43,4 @@ kubectl -n demo rollout status deploy/web
 ```bash
 bash scripts/collect-snapshots.sh
 ls -la site/evidence/
+```
