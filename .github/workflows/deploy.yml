@@ -37,7 +37,7 @@ jobs:
             echo "== install site/index.html =="
             install -m 0644 /tmp/shipit-deploy/site/index.html /var/snap/caddy/common/site/index.html
 
-            echo "== run snapshots =="
+            echo "== refresh evidence snapshots =="
             install -m 0755 /tmp/shipit-deploy/scripts/collect-snapshots.sh /tmp/collect-snapshots.sh
             /tmp/collect-snapshots.sh || true
 
