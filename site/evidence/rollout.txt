@@ -2,6 +2,6 @@ deployment.apps/web
 REVISION  CHANGE-CAUSE
 14        release v1: switch image to v1
 15        release v2: switch image to v2 + label release=v2
-16        release v2: switch image to v2 + label release=v2
 17        release v2: switch image to v2 + label release=v2
+18        release v2: switch image to v2 + label release=v2
 
