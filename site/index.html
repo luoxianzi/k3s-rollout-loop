@@ -1,10 +1,10 @@
-!doctype html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>k3s 上线闭环 ✅：滚动发布与回滚 | 个人项目</title>
-  <meta name="description" content="镜像 v1/v2 → k3s（Deployment/Service）→ Caddy 反向代理 → 公网访问。支持滚动更新与回滚，页面展示集群运行状态与发布记录。" />
+  <title>k3s DevOps 闭环 ✅：CI/CD、滚动发布与回滚 | 个人项目</title>
+  <meta name="description" content="基于 GitHub Actions 自动化部署。镜像 v1/v2 → k3s(Deployment/Service) → Caddy 反向代理。支持滚动更新与回滚，页面实时展示 CI/CD 结果与运行快照。" />
   <style>
     :root{
       --bg:#f6f8fc;
@@ -177,7 +177,7 @@
         <span class="logo" aria-hidden="true"></span>
         <div>
           <div class="kicker">Personal Project</div>
-          <b>k3s 上线闭环 ✅：滚动发布与回滚</b>
+          <b>k3s DevOps 闭环 ✅：CI/CD、滚动发布与回滚</b>
         </div>
       </a>
       <div class="nav">
@@ -189,16 +189,16 @@
     </div>
 
     <div class="hero" id="overview">
-      <div class="kicker">Deploy • Release • Rollback • Operability</div>
-      <div class="h1">k3s 上线闭环 ✅：滚动发布与回滚</div>
+      <div class="kicker">CI/CD • Deploy • Release • Rollback</div>
+      <div class="h1">k3s DevOps 闭环 ✅：CI/CD、滚动发布与回滚</div>
       <div class="muted">
-        我完成了一个<strong>端到端上线闭环</strong>：构建并发布镜像 v1/v2，在 k3s 中部署 <code>Deployment</code> + <code>Service(NodePort)</code>，
-        通过 Caddy 暴露 80 端口对外提供访问。项目重点是<strong>发布可控、切换可验证、问题可定位</strong>，体现运维与 DevOps 能力。
+        我完成了一个<strong>端到端 DevOps 上线闭环</strong>：构建镜像并在 k3s 中部署 <code>Deployment</code> + <code>Service(NodePort)</code>，通过 Caddy 反向代理对外。
+        核心亮点是<strong>基于 GitHub Actions 与 Self-hosted Runner 实现了 Push-to-Deploy 自动化流水线</strong>，所有的静态资源上线与状态快照抓取均脱离手动操作，全自动完成。
       </div>
 
       <div class="row">
         <a class="btn btnPrimary" href="/demo" target="_blank" rel="noreferrer">打开 Demo（/demo）</a>
-        <a class="btn" href="/evidence/rollout.txt" target="_blank" rel="noreferrer">查看发布记录（文本）</a>
+        <a class="btn" href="#status">查看实时快照</a>
         <a class="btn" href="https://github.com/luoxianzi/k3s-rollout-loop" rel="noreferrer">代码仓库（GitHub）</a>
 
         <span class="statusDot" title="下方运行状态区从服务器读取输出">
@@ -208,59 +208,58 @@
       </div>
 
       <div class="chips" aria-label="Tech highlights">
+        <span class="chip">GitHub Actions (CI/CD)</span>
+        <span class="chip">Self-hosted Runner</span>
         <span class="chip">Docker 镜像 v1/v2</span>
         <span class="chip">k3s / Kubernetes</span>
-        <span class="chip">Deployment（2 副本）</span>
-        <span class="chip">Service(NodePort:30080)</span>
-        <span class="chip">Rolling Update / Rollback</span>
-        <span class="chip">Caddy :80 入口</span>
-        <span class="chip">UFW 收口端口</span>
+        <span class="chip">Rolling Update</span>
+        <span class="chip">Caddy 反向代理</span>
+        <span class="chip">Shell 自动化脚本</span>
       </div>
     </div>
 
     <div class="grid">
       <div class="card">
         <div class="h2">我负责的内容</div>
-        <div class="small">从“能跑”做到“可上线、可发布、可回滚、可排障”。</div>
+        <div class="small">从“手动部署”跨越到“全自动化流水线”。</div>
 
         <div style="display:grid;grid-template-columns:1fr;gap:12px;margin-top:10px">
           <div>
-            <div class="h3">交付与实现</div>
+            <div class="h3">架构交付与 CI/CD</div>
             <ul class="list">
-              <li><b>镜像版本管理</b>：构建并发布 v1/v2 镜像，用于验证发布与回滚链路。</li>
+              <li><b>持续集成/部署 (CI/CD)</b>：接入 GitHub Actions，在服务器侧配置 Self-hosted Runner，实现代码提交后免密自动拉取、同步网页并执行底层脚本。</li>
               <li><b>集群编排</b>：在 k3s 落地 Deployment + Service(NodePort)，保障副本数与滚动更新策略生效。</li>
-              <li><b>公网访问</b>：Caddy 监听 80，<code>/</code> 为作品页，<code>/demo</code> 反向代理到 <code>127.0.0.1:30080</code>。</li>
-              <li><b>发布控制</b>：通过 <code>kubectl set image</code> 驱动更新，结合 rollout status/history 追踪发布结果。</li>
+              <li><b>公网暴露</b>：Caddy 监听 80，<code>/</code> 为演示页，<code>/demo</code> 反代到 <code>127.0.0.1:30080</code>。</li>
             </ul>
           </div>
 
           <div>
-            <div class="h3">运维与可用性</div>
+            <div class="h3">运维与可用性保障</div>
             <ul class="list">
-              <li><b>可观测输出</b>：页面展示 Deployment / Pods / 发布记录 / /demo 响应，便于核对真实运行状态。</li>
-              <li><b>安全加固</b>：UFW 只放行 22/80，封闭 NodePort 与 k8s 关键端口；禁用 root 远程登录，仅允许 dev 登录。</li>
-              <li><b>排障路径</b>：可从入口层（Caddy）→ NodePort → Pod 逐层用 curl/kubectl 定位问题。</li>
+              <li><b>可观测性构建</b>：编写 Shell 脚本自动化抓取 Deployment / Pods / 发布记录，并通过 CI 流水线实时推送到前端页面展示。</li>
+              <li><b>安全加固</b>：UFW 防火墙严格收口，封闭 NodePort 直连；服务器禁用 Root 远程访问，启用专用普通用户权限隔离。</li>
             </ul>
             <div class="pillRow">
-              <span class="pill">发布可控</span>
-              <span class="pill">可回滚</span>
-              <span class="pill">可排障</span>
+              <span class="pill">Push-to-Deploy</span>
+              <span class="pill">零人工干预</span>
+              <span class="pill">过程全记录</span>
             </div>
           </div>
         </div>
       </div>
 
       <div class="card">
-        <div class="h2">发布与回滚能力（我能做到什么）</div>
+        <div class="h2">DevOps 与发布能力（我能做到什么）</div>
 
         <ul class="list" style="margin-top:12px">
-          <li><b>滚动更新</b>：更新镜像版本后，k3s 按策略逐步替换 Pod，服务连续可用。</li>
-          <li><b>回滚</b>：可切回上一版本镜像，快速恢复到稳定状态。</li>
-          <li><b>发布记录</b>：为每次发布增加 change-cause，保留历史修订信息。</li>
+          <li><b>自动化流水线</b>：Push 代码瞬间触发 GitHub Actions，云服务器秒级响应，自动完成站点更新。</li>
+          <li><b>无缝滚动更新</b>：执行镜像升级时，k3s 按预设 maxSurge 策略逐步替换 Pod，保障对外服务不断联。</li>
+          <li><b>一键快速回滚</b>：若遇故障，可迅速回滚至上一可用镜像版本（Rollback），止损迅速。</li>
+          <li><b>发布留痕追踪</b>：强制标注 change-cause，随时可通过 Rollout History 追溯历史变更。</li>
         </ul>
 
         <div class="small muted" style="margin-top:10px">
-          相关输出在「运行状态」区实时展示（Deployment/Pods/Rollout）。
+          相关输出请在下方「运行状态」区查阅实时的自动化快照。
         </div>
       </div>
     </div>
@@ -283,7 +282,7 @@
 
           <rect class="box" x="350" y="52" width="280" height="92" rx="16"/>
           <text x="380" y="88" font-size="16" font-family="system-ui">Caddy :80</text>
-          <text class="mutedText" x="380" y="114" font-size="13" font-family="system-ui">/ → 作品页</text>
+          <text class="mutedText" x="380" y="114" font-size="13" font-family="system-ui">/ → 自动化部署的作品页</text>
           <text class="mutedText" x="380" y="134" font-size="13" font-family="system-ui">/demo → reverse_proxy</text>
 
           <rect class="box" x="700" y="52" width="240" height="92" rx="16"/>
@@ -314,8 +313,8 @@
     <div class="card" id="status" style="margin-top:14px">
       <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-end">
         <div>
-          <div class="h2">运行状态（实时）</div>
-          <div class="small">页面直接读取服务器输出，用于核对当前部署与发布记录。</div>
+          <div class="h2">运行状态（CI/CD 实时快照）</div>
+          <div class="small">页面直接读取由 GitHub Actions 自动化脚本生成的服务器输出，用于核对真实状态。</div>
         </div>
         <div class="small" id="updated">Last update: —</div>
       </div>
@@ -337,19 +336,16 @@
 
     <div class="card" id="repo" style="margin-top:14px">
       <div class="h2">代码与配置（GitHub）</div>
-      <div class="muted">
-      </div>
       <ul class="list">
-  <li><b>k8s/</b>：deploy.yaml / service.yaml（Deployment & Service / NodePort 30080）</li>
-  <li><b>caddy/</b>：Caddyfile（:80 入口；/demo 反代到 127.0.0.1:30080）</li>
-  <li><b>scripts/</b>：collect-snapshots.sh（导出运行快照到 site/evidence）</li>
-  <li><b>site/</b>：作品页源码（index.html）</li>
-</ul>
-      <div class="small muted" style="margin-top:10px">
-      </div>
+        <li><b>.github/workflows/</b>：deploy.yml（核心！定义了 CI/CD 自动化流水线）</li>
+        <li><b>k8s/</b>：deploy.yaml / service.yaml（Deployment & Service / NodePort 30080）</li>
+        <li><b>caddy/</b>：Caddyfile（:80 入口；/demo 反代到 127.0.0.1:30080）</li>
+        <li><b>scripts/</b>：collect-snapshots.sh（自动化运行快照收集脚本）</li>
+        <li><b>site/</b>：前端项目展示源码（index.html）</li>
+      </ul>
 
       <div class="footer">
-        <div>k3s • Caddy • Rolling Update</div>
+        <div>GitHub Actions • k3s • Caddy • Rolling Update</div>
       </div>
     </div>
 
