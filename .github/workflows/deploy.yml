@@ -16,43 +16,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Upload artifacts to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.K3S_HOST }}
-          username: ${{ secrets.K3S_USER }}
-          key: ${{ secrets.K3S_SSH_KEY }}
-          source: "site/index.html,scripts/collect-snapshots.sh"
-          target: "/tmp/shipit-deploy"
+      - name: Deploy locally on server (install site + refresh snapshots)
+        run: |
+          set -euo pipefail
 
-      - name: Deploy on server (install site + refresh snapshots)
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.K3S_HOST }}
-          username: ${{ secrets.K3S_USER }}
-          key: ${{ secrets.K3S_SSH_KEY }}
-          script: |
-            set -euo pipefail
+          echo "== whoami / perms =="
+          whoami
+          id
+          ls -ld /var/snap/caddy/common/site || true
+          ls -ld /var/snap/caddy/common/site/evidence || true
 
-            echo "== whoami / perms =="
-            whoami
-            id
-            ls -ld /var/snap/caddy/common/site || true
-            ls -ld /var/snap/caddy/common/site/evidence || true
+          echo "== install site/index.html =="
+          # 确保网页及证据目录存在
+          mkdir -p /var/snap/caddy/common/site/evidence
+          # 直接将仓库里的代码复制到 Caddy 的代理目录下
+          install -m 0644 site/index.html /var/snap/caddy/common/site/index.html
 
-            echo "== check uploaded files =="
-            ls -R /tmp/shipit-deploy || true
-            test -f /tmp/shipit-deploy/site/index.html
-            test -f /tmp/shipit-deploy/scripts/collect-snapshots.sh
+          echo "== refresh evidence snapshots =="
+          # 赋予脚本执行权限并在服务器本地直接执行
+          chmod +x scripts/collect-snapshots.sh
+          ./scripts/collect-snapshots.sh || true
 
-            echo "== install site/index.html =="
-            install -m 0644 /tmp/shipit-deploy/site/index.html /var/snap/caddy/common/site/index.html
-
-            echo "== refresh evidence snapshots =="
-            install -m 0755 /tmp/shipit-deploy/scripts/collect-snapshots.sh /tmp/collect-snapshots.sh
-            /tmp/collect-snapshots.sh || true
-
-            echo "== smoke test =="
-            curl -fsS http://127.0.0.1/ | head -n 2
-            curl -fsS http://127.0.0.1/demo | head -n 2
-            echo "OK"
+          echo "== smoke test =="
+          # 验证 Caddy 代理和网页是否存活
+          curl -fsS http://127.0.0.1/ | head -n 2
+          curl -fsS http://127.0.0.1/demo | head -n 2
+          echo "OK"
